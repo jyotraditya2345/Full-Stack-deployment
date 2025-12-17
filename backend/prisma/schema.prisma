@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TaskStatus {
+  TO_DO
+  IN_PROGRESS
+  REVIEW
+  COMPLETED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model User {
+  id             String         @id @default(uuid())
+  email          String         @unique
+  passwordHash   String
+  name           String
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  tasksCreated   Task[]         @relation("creator")
+  tasksAssigned  Task[]         @relation("assignee")
+  notifications  Notification[]
+  auditLogs      TaskAudit[]
+}
+
+model Task {
+  id           String       @id @default(uuid())
+  title        String       @db.VarChar(100)
+  description  String
+  dueDate      DateTime
+  priority     TaskPriority @default(MEDIUM)
+  status       TaskStatus   @default(TO_DO)
+  creatorId    String
+  assignedToId String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  creator      User         @relation("creator", fields: [creatorId], references: [id])
+  assignee     User?        @relation("assignee", fields: [assignedToId], references: [id])
+  notifications Notification[]
+  audits        TaskAudit[]
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  taskId    String?
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  task      Task?    @relation(fields: [taskId], references: [id])
+}
+
+model TaskAudit {
+  id        String   @id @default(uuid())
+  taskId    String
+  userId    String
+  action    String
+  createdAt DateTime @default(now())
+  task      Task     @relation(fields: [taskId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+}
