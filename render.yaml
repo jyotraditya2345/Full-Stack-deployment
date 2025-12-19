@@ -29,11 +29,12 @@ services:
       - key: NODE_ENV
         value: production
 
-  - type: static_site
+  - type: static
     name: collaborative-task-manager-frontend
     plan: free
-    buildCommand: cd frontend && npm install && npm run build
-    publishPath: frontend/dist
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    publishPath: dist
     envVars:
       - key: VITE_API_URL
         value: https://YOUR_API_URL/api
